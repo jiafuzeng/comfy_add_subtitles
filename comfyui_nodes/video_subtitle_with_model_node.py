@@ -64,9 +64,11 @@ class VideoSubtitleWithModelNode:
                 }),
                 "subtitle_style": ([
                     "default", "cinema", "youtube", "minimal", 
-                    "top_news", "strong_shadow", "dramatic_shadow"
+                    "top_news", "strong_shadow", "dramatic_shadow",
+                    "background_black", "background_blur", "colorful_background",
+                    "elegant", "gaming"
                 ], {
-                    "default": "strong_shadow",
+                    "default": "background_black",
                     "tooltip": "预设字幕样式"
                 })
             },
@@ -80,7 +82,10 @@ class VideoSubtitleWithModelNode:
                 }),
                 "custom_position": ([
                     "none", "bottom_center", "bottom_left", "bottom_right",
-                    "top_center", "top_left", "top_right", "center"
+                    "bottom_10", "bottom_20", "bottom_30",
+                    "top_center", "top_left", "top_right", 
+                    "top_10", "top_20",
+                    "center", "center_30", "center_70"
                 ], {
                     "default": "none",
                     "tooltip": "自定义字幕位置"
@@ -115,6 +120,12 @@ class VideoSubtitleWithModelNode:
                     "multiline": False,
                     "placeholder": "语言提示(如:zh,en)，留空自动检测",
                     "tooltip": "指定音频语言以提高识别准确度"
+                }),
+                "custom_font": ("STRING", {
+                    "default": "",
+                    "multiline": False,
+                    "placeholder": "自定义字体路径(留空使用默认)",
+                    "tooltip": "指定字体文件路径，支持中文字体"
                 })
             }
         }
@@ -157,7 +168,10 @@ class VideoSubtitleWithModelNode:
             # 设置日志记录
             # 生成文件名
             video_name = os.path.splitext(os.path.basename(video_path))[0]
-            audio_path = os.path.join(output_dir, f"{video_name}.wav")
+            # 使用时间戳避免并发冲突
+            import time
+            timestamp = int(time.time() * 1000)
+            audio_path = os.path.join(output_dir, f"{video_name}_temp_{timestamp}.wav")
             srt_path = os.path.join(output_dir, f"{video_name}.srt")
             output_video_path = os.path.join(output_dir, f"{video_name}_with_subtitles.mp4")
             
@@ -293,13 +307,15 @@ class VideoSubtitleWithModelNode:
         font_color_g = kwargs.get("font_color_g", 255)
         font_color_b = kwargs.get("font_color_b", 255)
         enable_shadow = kwargs.get("enable_shadow", True)
+        custom_font = kwargs.get("custom_font", "")
         
         # 检查是否有自定义设置
         if any([
             custom_position != "none",
             custom_font_size != 24,
             (font_color_r, font_color_g, font_color_b) != (255, 255, 255),
-            enable_shadow is not True
+            enable_shadow is not True,
+            custom_font != ""
         ]):
             # 创建自定义样式
             base_style = PresetStyles.default()
@@ -317,6 +333,10 @@ class VideoSubtitleWithModelNode:
             
             # 阴影设置
             base_style.shadow_enabled = enable_shadow
+            
+            # 自定义字体
+            if custom_font and os.path.exists(custom_font):
+                base_style.font_family = custom_font
             
             return base_style
         
