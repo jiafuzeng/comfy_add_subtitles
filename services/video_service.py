@@ -200,6 +200,8 @@ class VideoService:
         best_font = self._find_best_font(style.font_family)
         style_configs.append(f"FontName={best_font}")
         style_configs.append(f"FontSize={style.font_size}")
+        # 启用智能换行，避免长句贴边越界
+        style_configs.append("WrapStyle=0")
         
         # 字体颜色
         font_color = f"&H{style.font_color[2]:02x}{style.font_color[1]:02x}{style.font_color[0]:02x}"
@@ -240,11 +242,15 @@ class VideoService:
         else:  # center
             style_configs.append(f"MarginV=0")
         
-        # 左右边距（简化版本，只在需要时添加）
+        # 左右边距（参考视频宽度，给居中位置添加对称边距，避免贴边越界）
         if style.position.value in ['bottom_left', 'top_left']:
             style_configs.append(f"MarginL={style.margin_x}")
         elif style.position.value in ['bottom_right', 'top_right']:
             style_configs.append(f"MarginR={style.margin_x}")
+        elif style.position.value in ['bottom_center', 'top_center', 'center']:
+            margin_lr = max(int(video_width * 0.06), 20)
+            style_configs.append(f"MarginL={margin_lr}")
+            style_configs.append(f"MarginR={margin_lr}")
         
         # 组合样式配置
         force_style = ",".join(style_configs)

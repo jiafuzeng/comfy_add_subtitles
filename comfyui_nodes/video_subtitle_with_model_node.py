@@ -34,6 +34,7 @@ except ImportError:
         from subtitle_service import SubtitleService
         from video_service import VideoService
         from whisper_service import WhisperService
+        from subtitle_style import SubtitlePosition, PresetStyles
 
 
 def flush_line(line_text, line_start, end_time, transcript_lines):
